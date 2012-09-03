@@ -7,13 +7,13 @@ module Web.Uploadcare
 , request
 ) where
 
+import qualified Crypto.Hash.MD5 as MD5
+import qualified Crypto.Hash.SHA1 as SHA1
+import Crypto.MAC.HMAC (hmac)
 import Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString as BS
-import qualified Data.ByteString.Char8 as CBS
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import Data.Char (toLower)
-import qualified Data.Digest.MD5 as MD5
-import Data.HMAC (hmac_sha1)
 import Data.Hex (hex)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
@@ -30,14 +30,14 @@ makeSignature :: ByteString -> Method -> ByteString -> ByteString
 makeSignature secretKey rMethod rPath rBody timestamp =
     lowerHex . sign $ BS.intercalate "\n" [
         rMethod
-      , lowerHex . MD5.hash . BS.unpack $ rBody
+      , lowerHex . MD5.hash $ rBody
       , jsonContentType
       , timestamp
       , rPath
       ]
   where
-    lowerHex = CBS.map toLower . hex . BS.pack
-    sign = hmac_sha1 (BS.unpack secretKey) . BS.unpack
+    lowerHex = BS.map toLower . hex
+    sign = hmac SHA1.hash 64 secretKey
 
 apiHeaders :: ByteString -> ByteString -> ByteString -> RequestHeaders
 apiHeaders publicKey signature timestamp = [
@@ -63,5 +63,5 @@ request publicKey secretKey rMethod rPath = do
     res <- withManager $ httpLbs req
     return res
   where
-    toTimestamp = CBS.pack . formatTime defaultTimeLocale httpDateFormat
+    toTimestamp = BS.pack . formatTime defaultTimeLocale httpDateFormat
     httpDateFormat = "%a, %d %b %Y %H:%M:%S GMT"
