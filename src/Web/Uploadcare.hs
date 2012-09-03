@@ -3,56 +3,65 @@
 module Web.Uploadcare
 (
   makeSignature
-, authHeader
+, apiHeaders
 , request
 ) where
 
-import qualified Crypto.Hash.MD5 as MD5
-import qualified Crypto.Hash.SHA1 as SHA1
-import Crypto.MAC.HMAC (hmac)
 import Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as CBS
 import qualified Data.ByteString.Lazy as LBS
 import Data.Char (toLower)
+import qualified Data.Digest.MD5 as MD5
+import Data.HMAC (hmac_sha1)
 import Data.Hex (hex)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
 import Network.HTTP.Conduit
-import Network.HTTP.Types.Header (Header)
+import Network.HTTP.Types.Header (RequestHeaders, hContentType, hDate)
 import Network.HTTP.Types.Method (Method)
-import System.Locale (defaultTimeLocale, rfc822DateFormat)
+import System.Locale (defaultTimeLocale)
 
-lowerHex :: ByteString -> ByteString
-lowerHex = BS.map toLower . hex
+jsonContentType :: ByteString
+jsonContentType = "application/json"
 
 makeSignature :: ByteString -> Method -> ByteString -> ByteString
-              -> IO ByteString
-makeSignature secretKey rMethod rPath rBody = do
-    time <- getCurrentTime
-    return . lowerHex . sign $ BS.intercalate "\n" [
+              -> ByteString -> ByteString
+makeSignature secretKey rMethod rPath rBody timestamp =
+    lowerHex . sign $ BS.intercalate "\n" [
         rMethod
-      , lowerHex . MD5.hash $ rBody
-      , "application/json"
-      , BS.pack $ formatTime defaultTimeLocale rfc822DateFormat time
+      , lowerHex . MD5.hash . BS.unpack $ rBody
+      , jsonContentType
+      , timestamp
       , rPath
       ]
   where
-    sign = hmac SHA1.hash 512 secretKey
+    lowerHex = CBS.map toLower . hex . BS.pack
+    sign = hmac_sha1 (BS.unpack secretKey) . BS.unpack
 
-authHeader :: ByteString -> ByteString -> Header
-authHeader publicKey signature = ("Authentication", auth)
+apiHeaders :: ByteString -> ByteString -> ByteString -> RequestHeaders
+apiHeaders publicKey signature timestamp = [
+        ("Authentication", auth)
+      , (hDate, timestamp)
+      , (hContentType, jsonContentType)
+      ]
   where
     auth = BS.concat ["UploadCare ", publicKey, ":", signature]
 
 request :: ByteString -> ByteString -> Method -> ByteString
         -> IO (Response LBS.ByteString)
 request publicKey secretKey rMethod rPath = do
-    signature <- makeSignature secretKey rMethod rPath ""
+    time <- getCurrentTime
+    let timestamp = toTimestamp time
+    let signature = makeSignature secretKey rMethod rPath "" timestamp
     let req = def {
         method = rMethod
       , host = "api.uploadcare.com"
       , path = rPath
-      , requestHeaders = [authHeader publicKey signature]
+      , requestHeaders = apiHeaders publicKey signature timestamp
     }
     res <- withManager $ httpLbs req
     return res
+  where
+    toTimestamp = CBS.pack . formatTime defaultTimeLocale httpDateFormat
+    httpDateFormat = "%a, %d %b %Y %H:%M:%S GMT"
