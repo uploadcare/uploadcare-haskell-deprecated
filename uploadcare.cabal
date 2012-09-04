@@ -15,9 +15,13 @@ cabal-version:       >= 1.8
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Web.Uploadcare
+  exposed-modules: Web.Uploadcare
+                   Web.Uploadcare.API
+                   Web.Uploadcare.Internal
 
   build-depends: base         >= 4       && < 5
+               , aeson        >= 0.6.0.2 && < 0.6.1
+               , attoparsec   >= 0.8     && < 0.11
                , bytestring   >= 0.9.2.1 && < 0.9.3
                , cryptohash   >= 0.7.5   && < 0.8
                , hex          >= 0.1.2   && < 0.2
