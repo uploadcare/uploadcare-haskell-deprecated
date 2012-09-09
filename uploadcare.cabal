@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules: Web.Uploadcare
                    Web.Uploadcare.API
+                   Web.Uploadcare.Client
                    Web.Uploadcare.Internal
 
   build-depends: base         >= 4       && < 5

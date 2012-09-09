@@ -15,6 +15,7 @@ import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
 import Network.HTTP.Conduit (Response(..))
+import Web.Uploadcare.Client (Client)
 import Web.Uploadcare.Internal
 
 data File = File {
@@ -46,9 +47,9 @@ instance FromJSON File where
              <*> v .: "url"
     parseJSON _ = mzero
 
-file :: ByteString -> ByteString -> ByteString -> IO (Maybe File)
-file publicKey secretKey fileId = do
-    res <- request publicKey secretKey "GET" path
+file :: Client -> ByteString -> IO (Maybe File)
+file client fileId = do
+    res <- request client "GET" path
     return $ parseResponse res
   where
     path = BS.concat ["/files/", fileId, "/"]
