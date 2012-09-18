@@ -4,7 +4,9 @@ module Web.Uploadcare
 , newClient
 , closeClient
 , File(..)
-, file
+, getFile
+, deleteFile
+, saveFile
 ) where
 
 import Web.Uploadcare.API

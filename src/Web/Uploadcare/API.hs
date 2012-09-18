@@ -3,7 +3,9 @@
 module Web.Uploadcare.API
 (
   File(..)
-, file
+, getFile
+, deleteFile
+, saveFile
 ) where
 
 import Control.Applicative ((<$>), (<*>))
@@ -47,12 +49,29 @@ instance FromJSON File where
              <*> v .: "url"
     parseJSON _ = mzero
 
-file :: Client -> ByteString -> IO (Maybe File)
-file client fileId = do
+getFile :: Client -> ByteString -> IO (Maybe File)
+getFile client fileId = do
     res <- request client "GET" path
     return $ parseResponse res
   where
-    path = BS.concat ["/files/", fileId, "/"]
+    path = BS.concat ["/files/", fileId]
+
+
+deleteFile :: Client -> File -> IO ()
+deleteFile client file = do
+    _ <- request client "DELETE" path
+    return ()
+  where
+    path = BS.concat ["/files/", fileId]
+    fileId = BS.pack $ file_id file
+
+saveFile :: Client -> File -> IO ()
+saveFile client file = do
+    _ <- request client "POST" path
+    return ()
+  where
+    path = BS.concat ["/files/", fileId, "/storage"]
+    fileId = BS.pack $ file_id file
 
 parseResponse :: Response LBS.ByteString -> Maybe File
 parseResponse res = case parse json body of

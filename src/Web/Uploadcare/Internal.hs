@@ -18,7 +18,7 @@ import Data.Hex (hex)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
 import Network.HTTP.Conduit
-import Network.HTTP.Types.Header (RequestHeaders, hContentType, hDate)
+import Network.HTTP.Types.Header (RequestHeaders, hAccept, hContentType, hDate)
 import Network.HTTP.Types.Method (Method)
 import System.Locale (defaultTimeLocale)
 import Web.Uploadcare.Client
@@ -43,6 +43,7 @@ makeSignature client rMethod rPath rBody timestamp =
 apiHeaders :: Client -> ByteString -> ByteString -> RequestHeaders
 apiHeaders client signature timestamp = [
         ("Authentication", auth)
+      , (hAccept, "application/vnd.uploadcare-v0.2+json")
       , (hDate, timestamp)
       , (hContentType, jsonContentType)
       ]
