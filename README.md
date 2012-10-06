@@ -1,4 +1,3 @@
-uploadcare-haskell
-==================
+# uploadcare-haskell
 
-Uploadcare client for Haskell.
+Haskell client for Uploadcare. WIP

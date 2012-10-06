@@ -1,6 +1,6 @@
 name:                uploadcare
 version:             0.1
-synopsis:            Uploadcare client for Haskell.
+synopsis:            Haskell client for Uploadcare.
 description:         Haskell client for the Uploadcare API.
                      Uploadcare handles file uploads and storage for you,
                      while you focus on other important things.
@@ -35,4 +35,4 @@ library
 
 source-repository head
   type:     git
-  location: git://github.com/dimituri/uploadcare-haskell.git
+  location: git://github.com/uploadcare/uploadcare-haskell.git
