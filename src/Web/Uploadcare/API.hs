@@ -54,7 +54,7 @@ getFile client fid = do
     res <- request client "GET" path
     return $ parseResponse res
   where
-    path = BS.concat ["/files/", fid]
+    path = BS.concat ["/files/", fid, "/"]
 
 
 deleteFile :: Client -> File -> IO ()
@@ -62,7 +62,7 @@ deleteFile client file = do
     _ <- request client "DELETE" path
     return ()
   where
-    path = BS.concat ["/files/", fid]
+    path = BS.concat ["/files/", fid, "/"]
     fid = BS.pack $ fileId file
 
 saveFile :: Client -> File -> IO ()
@@ -70,7 +70,7 @@ saveFile client file = do
     _ <- request client "POST" path
     return ()
   where
-    path = BS.concat ["/files/", fid, "/storage"]
+    path = BS.concat ["/files/", fid, "/storage/"]
     fid = BS.pack $ fileId file
 
 parseResponse :: Response LBS.ByteString -> Maybe File
