@@ -5,11 +5,15 @@ module Web.Uploadcare.Internal
   makeSignature
 , apiHeaders
 , request
+, parseResponse
 ) where
 
 import qualified Crypto.Hash.MD5 as MD5
 import qualified Crypto.Hash.SHA1 as SHA1
 import Crypto.MAC.HMAC (hmac)
+import Data.Aeson
+import qualified Data.Aeson.Types as T
+import Data.Attoparsec.Lazy (parse, Result(..))
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as LBS
@@ -66,3 +70,10 @@ request client rMethod rPath = do
   where
     toTimestamp = BS.pack . formatTime defaultTimeLocale httpDateFormat
     httpDateFormat = "%a, %d %b %Y %H:%M:%S GMT"
+
+parseResponse :: FromJSON a => Response LBS.ByteString -> Maybe a
+parseResponse res = case parse json body of
+    (Done _ r) -> T.parseMaybe parseJSON r
+    _          -> Nothing
+  where
+    body = responseBody res

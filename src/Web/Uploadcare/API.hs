@@ -11,12 +11,8 @@ module Web.Uploadcare.API
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (mzero)
 import Data.Aeson
-import qualified Data.Aeson.Types as T
-import Data.Attoparsec.Lazy (parse, Result(..))
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy as LBS
-import Network.HTTP.Conduit (Response(..))
 import Web.Uploadcare.Client (Client)
 import Web.Uploadcare.Internal
 
@@ -72,10 +68,3 @@ saveFile client file = do
   where
     path = BS.concat ["/files/", fid, "/storage/"]
     fid = BS.pack $ fileId file
-
-parseResponse :: Response LBS.ByteString -> Maybe File
-parseResponse res = case parse json body of
-    (Done _ r) -> T.parseMaybe parseJSON r :: Maybe File
-    _          -> Nothing
-  where
-    body = responseBody res
