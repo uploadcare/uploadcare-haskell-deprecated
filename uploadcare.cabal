@@ -14,7 +14,7 @@ build-type:          Simple
 cabal-version:       >= 1.8
 
 library
-  hs-source-dirs:      src
+  hs-source-dirs: src
   exposed-modules: Web.Uploadcare
                    Web.Uploadcare.API
                    Web.Uploadcare.Client
@@ -23,7 +23,7 @@ library
   build-depends: base         >= 4       && < 5
                , aeson        >= 0.6.0.2 && < 0.6.1
                , attoparsec   >= 0.8     && < 0.11
-               , bytestring   >= 0.9.2.1 && < 0.9.3
+               , bytestring   >= 0.9.2.1
                , cryptohash   >= 0.7.5   && < 0.8
                , hex          >= 0.1.2   && < 0.2
                , http-conduit == 1.6.0.*
@@ -32,6 +32,26 @@ library
                , time         >= 1.4     && < 1.4.1
 
   ghc-options: -Wall
+
+
+test-suite test
+  hs-source-dirs: src, test
+  main-is: Spec.hs
+  type: exitcode-stdio-1.0
+  build-depends: base  >= 4     && < 5
+               , hspec >= 1.4.2 && < 1.5
+               , aeson
+               , attoparsec
+               , bytestring
+               , cryptohash
+               , hex
+               , http-conduit
+               , http-types
+               , old-locale
+               , time
+
+  ghc-options: -Wall
+
 
 source-repository head
   type:     git

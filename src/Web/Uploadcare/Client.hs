@@ -1,7 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Web.Uploadcare.Client
 (
   Client(..)
 , newClient
+, newDemoClient
 , closeClient
 ) where
 
@@ -22,6 +25,11 @@ newClient connPublicKey connSecretKey = do
       , publicKey = connPublicKey
       , secretKey = connSecretKey
       }
+
+newDemoClient :: IO Client
+newDemoClient = do
+    putStrLn "Warning! You are using the demo account."
+    newClient "demopublickey" "demoprivatekey"
 
 closeClient :: Client -> IO ()
 closeClient = closeManager . manager

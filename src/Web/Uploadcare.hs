@@ -2,6 +2,7 @@ module Web.Uploadcare
 (
   Client(..)
 , newClient
+, newDemoClient
 , closeClient
 , File(..)
 , getFile
