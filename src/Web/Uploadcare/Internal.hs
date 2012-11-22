@@ -10,7 +10,7 @@ module Web.Uploadcare.Internal
 , parseResponse
 ) where
 
-import Control.Exception (try)
+import Control.Exception (try, throw)
 import qualified Crypto.Hash.MD5 as MD5
 import qualified Crypto.Hash.SHA1 as SHA1
 import Crypto.MAC.HMAC (hmac)
@@ -25,7 +25,7 @@ import Data.Hex (hex)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Format (formatTime)
 import Network.HTTP.Conduit
-import Network.HTTP.Types (statusMessage)
+import Network.HTTP.Types (Status(..))
 import Network.HTTP.Types.Header (RequestHeaders, hAccept, hContentType, hDate)
 import Network.HTTP.Types.Method (Method)
 import System.Locale (defaultTimeLocale)
@@ -63,29 +63,33 @@ request :: Client -> Method -> ByteString
 request client rMethod rPath = do
     time <- getCurrentTime
     let timestamp = toTimestamp time
-    let signature = makeSignature client rMethod rPath "" timestamp
-    let req = def {
-        method = rMethod
-      , host = "api.uploadcare.com"
-      , path = rPath
-      , requestHeaders = apiHeaders client signature timestamp
-    }
+        signature = makeSignature client rMethod rPath "" timestamp
+        req = def {
+            method = rMethod
+          , host = "api.uploadcare.com"
+          , path = rPath
+          , requestHeaders = apiHeaders client signature timestamp
+        }
     eres <- try $ withManager $ httpLbs req
     return $ case eres of
-        Right res -> Right res
+        Right res                           -> Right res
         Left (StatusCodeException status _) -> Left $ statusString status
-
+        Left err                            -> throw err
   where
     toTimestamp = BS.pack . formatTime defaultTimeLocale httpDateFormat
     httpDateFormat = "%a, %d %b %Y %H:%M:%S GMT"
-    statusString = BS.unpack . statusMessage
+    statusString s = unwords [
+          show $ statusCode s
+        , BS.unpack $ statusMessage s
+        ]
 
-queryRequest :: Client -> Method -> ByteString -> IO (Either String a)
+queryRequest :: FromJSON a => Client -> Method -> ByteString
+             -> IO (Either String a)
 queryRequest client rMethod rPath = do
     eres <- request client rMethod rPath
     return $ case eres of
         Right res -> parseResponse res
-        Left err -> Left err
+        Left err  -> Left err
 
 commandRequest :: Client -> Method -> ByteString -> IO (Either String ())
 commandRequest client rMethod rPath = do
@@ -96,7 +100,7 @@ commandRequest client rMethod rPath = do
 
 parseResponse :: FromJSON a => Response LBS.ByteString -> Either String a
 parseResponse res = case parse json body of
-    (Done _ r)     -> T.parseEither parseJSON r
-    (Fail _ _ err) -> Left err
+    Done _ r     -> T.parseEither parseJSON r
+    Fail _ _ err -> Left err
   where
     body = responseBody res

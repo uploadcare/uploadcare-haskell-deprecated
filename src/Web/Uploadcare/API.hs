@@ -8,6 +8,7 @@ module Web.Uploadcare.API
 , saveFile
 ) where
 
+import Data.Aeson
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (mzero)
 import Data.ByteString.Char8 (ByteString)
