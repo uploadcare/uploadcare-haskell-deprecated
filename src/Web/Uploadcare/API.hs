@@ -10,7 +10,6 @@ module Web.Uploadcare.API
 
 import Control.Applicative ((<$>), (<*>))
 import Control.Monad (mzero)
-import Data.Aeson
 import Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as BS
 import Web.Uploadcare.Client (Client)
@@ -45,26 +44,22 @@ instance FromJSON File where
              <*> v .: "url"
     parseJSON _ = mzero
 
-getFile :: Client -> ByteString -> IO (Maybe File)
+getFile :: Client -> ByteString -> IO (Either String File)
 getFile client fid = do
-    res <- request client "GET" path
-    return $ parseResponse res
+    queryRequest client "GET" path
   where
     path = BS.concat ["/files/", fid, "/"]
 
-
-deleteFile :: Client -> File -> IO ()
+deleteFile :: Client -> File -> IO (Either String ())
 deleteFile client file = do
-    _ <- request client "DELETE" path
-    return ()
+    commandRequest client "DELETE" path
   where
     path = BS.concat ["/files/", fid, "/"]
     fid = BS.pack $ fileId file
 
-saveFile :: Client -> File -> IO ()
+saveFile :: Client -> File -> IO (Either String ())
 saveFile client file = do
-    _ <- request client "POST" path
-    return ()
+    commandRequest client "POST" path
   where
     path = BS.concat ["/files/", fid, "/storage/"]
     fid = BS.pack $ fileId file
